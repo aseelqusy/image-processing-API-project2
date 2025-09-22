@@ -1,0 +1,8 @@
+{
+  "spec_dir": "__tests__",
+  "spec_files": ["**/*.spec.ts"],
+  "helpers": [],
+  "requires": ["ts-node/register"],
+  "stopSpecOnExpectationFailure": false,
+  "random": false
+}
