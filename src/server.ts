@@ -4,7 +4,6 @@ import app from './app';
 
 const PORT = Number(process.env.PORT || 3000);
 
-
 for (const p of ['storage/originals', 'storage/cache']) {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 }

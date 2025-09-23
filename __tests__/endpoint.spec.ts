@@ -14,7 +14,6 @@ describe('GET /api/images endpoint', () => {
     if (!fs.existsSync(ORIGINALS)) fs.mkdirSync(ORIGINALS, { recursive: true });
     if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
 
-    
     const imgPath = path.join(ORIGINALS, TEST_FILE);
     if (!fs.existsSync(imgPath)) {
       const buf = await sharp({

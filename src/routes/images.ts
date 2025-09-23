@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import path from 'path';
 import { processImage, ProcessingError } from '../utils/imageProcessor';
+import fs from 'fs';
+import { ORIGINALS } from '../utils/paths';
+import { clearAllCache } from '../utils/cache';
 
 const router = Router();
 
@@ -19,6 +22,115 @@ router.get('/', async (req, res, next) => {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.setHeader('Content-Type', 'image/jpeg');
     res.sendFile(path.resolve(outPath));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/', async (req, res, next) => {
+  try {
+    if (!req.is('application/json'))
+      throw new ProcessingError('content-type must be application/json', 400);
+    const { filename, data } = req.body as { filename?: string; data?: string };
+
+    if (!filename) throw new ProcessingError('filename is required', 400);
+    if (!/\.(jpe?g)$/i.test(filename))
+      throw new ProcessingError('only .jpg/.jpeg is supported', 400);
+    if (!data) throw new ProcessingError('data (base64) is required', 400);
+
+    const outPath = `${ORIGINALS}/${filename}`;
+    if (fs.existsSync(outPath))
+      throw new ProcessingError('file already exists', 409);
+
+    // نقبل بصيغة data URI أو base64 خام
+    const b64 = String(data).replace(/^data:image\/jpeg;base64,/, '');
+    const buf = Buffer.from(b64, 'base64');
+    if (buf.length === 0) throw new ProcessingError('invalid base64 data', 400);
+
+    fs.writeFileSync(outPath, buf);
+    res.status(201).json({ ok: true, filename });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/', async (req, res, next) => {
+  try {
+    if (!req.is('application/json')) {
+      throw new ProcessingError('content-type must be application/json', 400);
+    }
+    const { filename, data } = req.body as { filename?: string; data?: string };
+
+    if (!filename) throw new ProcessingError('filename is required', 400);
+    if (!/\.(jpe?g)$/i.test(filename)) {
+      throw new ProcessingError('only .jpg/.jpeg is supported', 400);
+    }
+    if (!data) throw new ProcessingError('data (base64) is required', 400);
+
+    const outPath = path.join(ORIGINALS, filename);
+    if (!fs.existsSync(outPath)) {
+      throw new ProcessingError('source image not found', 404);
+    }
+
+    const b64 = String(data).replace(/^data:image\/jpeg;base64,/, '');
+    const buf = Buffer.from(b64, 'base64');
+    if (buf.length === 0) throw new ProcessingError('invalid base64 data', 400);
+
+    // ✅ استبدال ذري لتفادي مشاكل Windows: اكتب ملف مؤقت ثم بدّله مكان الأصلي
+    const tmpPath = `${outPath}.tmp-${Date.now()}`;
+    try {
+      fs.writeFileSync(tmpPath, buf); // اكتب المؤقت أولًا
+
+      // جرّب حذف الأصلي؛ تجاهل ENOENT فقط
+      try {
+        fs.unlinkSync(outPath);
+      } catch (e: unknown) {
+        const err = e as NodeJS.ErrnoException;
+        if (err?.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+
+      fs.renameSync(tmpPath, outPath); // بدّل المؤقت مكان الأصلي
+    } catch (e: unknown) {
+      // تنظيف المؤقت لو فشلنا
+      try {
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+      } catch {
+        /* ignore */
+      }
+      const err = e as NodeJS.ErrnoException;
+      throw new ProcessingError(
+        `failed to replace file (${err?.code ?? err?.message ?? 'unknown'})`,
+        500
+      );
+    }
+
+    clearAllCache(); // نظّف الكاش بعد التحديث
+    res.json({ ok: true, filename, updated: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
+router.delete('/:filename', async (req, res, next) => {
+  try {
+    const filename = String(req.params.filename || '');
+
+    if (!filename) throw new ProcessingError('filename is required', 400);
+    if (!/\.(jpe?g)$/i.test(filename))
+      throw new ProcessingError('only .jpg/.jpeg is supported', 400);
+
+    const p = path.join(ORIGINALS, filename);
+    if (!fs.existsSync(p))
+      throw new ProcessingError('source image not found', 404);
+
+    fs.unlinkSync(p); // احذف الأصل
+    clearAllCache(); // نظّف الكاش
+
+    res.json({ ok: true, filename, deleted: true });
   } catch (err) {
     next(err);
   }

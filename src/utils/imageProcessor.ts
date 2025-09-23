@@ -49,7 +49,6 @@ export async function processImage({
   );
   const outPath = path.join(CACHE, `${key}.jpg`);
 
-  
   if (fs.existsSync(outPath)) return outPath;
 
   await sharp(origPath)
