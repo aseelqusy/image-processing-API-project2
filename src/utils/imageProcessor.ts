@@ -7,10 +7,10 @@ import { sha1 } from './hash';
 export type OutputFormat = 'jpeg';
 
 export interface ResizeParams {
-  filename: string; // يجب .jpg/.jpeg
+  filename: string; 
   width: number;
   height: number;
-  quality?: number; // 1..100
+  quality?: number; 
   format?: OutputFormat;
 }
 

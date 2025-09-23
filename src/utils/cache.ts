@@ -9,7 +9,7 @@ export function clearAllCache(): void {
     try {
       fs.unlinkSync(p);
     } catch {
-      // تجاهل أي خطأ حذف
+      
     }
   }
 }

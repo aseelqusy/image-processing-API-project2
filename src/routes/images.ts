@@ -76,12 +76,12 @@ router.put('/', async (req, res, next) => {
     const buf = Buffer.from(b64, 'base64');
     if (buf.length === 0) throw new ProcessingError('invalid base64 data', 400);
 
-    // ✅ استبدال ذري لتفادي مشاكل Windows: اكتب ملف مؤقت ثم بدّله مكان الأصلي
+    
     const tmpPath = `${outPath}.tmp-${Date.now()}`;
     try {
-      fs.writeFileSync(tmpPath, buf); // اكتب المؤقت أولًا
+      fs.writeFileSync(tmpPath, buf); 
 
-      // جرّب حذف الأصلي؛ تجاهل ENOENT فقط
+      
       try {
         fs.unlinkSync(outPath);
       } catch (e: unknown) {
@@ -91,13 +91,13 @@ router.put('/', async (req, res, next) => {
         }
       }
 
-      fs.renameSync(tmpPath, outPath); // بدّل المؤقت مكان الأصلي
+      fs.renameSync(tmpPath, outPath); 
     } catch (e: unknown) {
-      // تنظيف المؤقت لو فشلنا
+      
       try {
         if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
       } catch {
-        /* ignore */
+        
       }
       const err = e as NodeJS.ErrnoException;
       throw new ProcessingError(
@@ -106,7 +106,7 @@ router.put('/', async (req, res, next) => {
       );
     }
 
-    clearAllCache(); // نظّف الكاش بعد التحديث
+    clearAllCache();
     res.json({ ok: true, filename, updated: true });
   } catch (err) {
     next(err);
@@ -127,8 +127,8 @@ router.delete('/:filename', async (req, res, next) => {
     if (!fs.existsSync(p))
       throw new ProcessingError('source image not found', 404);
 
-    fs.unlinkSync(p); // احذف الأصل
-    clearAllCache(); // نظّف الكاش
+    fs.unlinkSync(p); 
+    clearAllCache(); 
 
     res.json({ ok: true, filename, deleted: true });
   } catch (err) {
