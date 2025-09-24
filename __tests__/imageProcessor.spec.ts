@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp';
+import sharp from 'sharp'; // لا بأس باستخدام sharp هنا لأنه dependency أساسي للمشروع
 import { ORIGINALS, CACHE } from '../src/utils/paths';
 import { processImage } from '../src/utils/imageProcessor';
 
@@ -9,6 +9,7 @@ const TEST_FILE = 'unit-test.jpg';
 async function ensureOriginal(): Promise<void> {
   if (!fs.existsSync(ORIGINALS)) fs.mkdirSync(ORIGINALS, { recursive: true });
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
+
   const p = path.join(ORIGINALS, TEST_FILE);
   if (!fs.existsSync(p)) {
     const buf = await sharp({
@@ -16,8 +17,8 @@ async function ensureOriginal(): Promise<void> {
         width: 60,
         height: 60,
         channels: 3,
-        background: { r: 0, g: 255, b: 0 },
-      },
+        background: { r: 0, g: 255, b: 0 } // أخضر
+      }
     })
       .jpeg({ quality: 90 })
       .toBuffer();
@@ -28,28 +29,45 @@ async function ensureOriginal(): Promise<void> {
 describe('processImage utility', () => {
   beforeAll(async () => {
     await ensureOriginal();
-    // نظّف الكاش
+
+    // نظّف الكاش قبل السويت
     for (const f of fs.readdirSync(CACHE)) {
-      fs.unlinkSync(path.join(CACHE, f));
+      try {
+        fs.unlinkSync(path.join(CACHE, f));
+      } catch {
+        /* ignore */
+      }
     }
   });
 
   it('produces a cached file for valid input', async () => {
-    const out = await processImage({
+    const outPath = await processImage({
       filename: TEST_FILE,
       width: 30,
-      height: 30,
+      height: 30
     });
-    expect(fs.existsSync(out)).toBeTrue();
+    expect(fs.existsSync(outPath)).toBeTrue();
+
+    // اختياري: تأكد فعلاً أنه JPEG صالح
+    const meta = await sharp(outPath).metadata();
+    expect(meta.width).toBe(30);
+    expect(meta.height).toBe(30);
+    expect(meta.format).toBe('jpeg');
   });
 
-  it('throws on invalid width', async () => {
+  it('throws on zero or negative dimensions', async () => {
     await expectAsync(
-      processImage({
-        filename: TEST_FILE,
-        width: 0 as unknown as number,
-        height: 30,
-      }),
+      processImage({ filename: TEST_FILE, width: 0 as unknown as number, height: 30 })
+    ).toBeRejected();
+
+    await expectAsync(
+      processImage({ filename: TEST_FILE, width: 30, height: -1 as unknown as number })
+    ).toBeRejected();
+  });
+
+  it('throws on non-existent source file', async () => {
+    await expectAsync(
+      processImage({ filename: 'i-do-not-exist.jpg', width: 20, height: 20 })
     ).toBeRejected();
   });
 });

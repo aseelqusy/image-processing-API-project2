@@ -66,3 +66,12 @@ Invoke-WebRequest "http://localhost:3000/api/images/sample-post.jpg" -Method DEL
 ```
 
 Note : this will delete the image
+
+## Testing
+
+Run all tests (compiled JS for stability):
+
+```bash
+npm test
+
+```
