@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import app from '../src/app';
 import { ORIGINALS, CACHE } from '../src/utils/paths';
 
-// توليد صورة اختبار داخل originals
+
 const TEST_FILE = 'spec-test.jpg';
 async function ensureOriginal(): Promise<void> {
   if (!fs.existsSync(ORIGINALS)) fs.mkdirSync(ORIGINALS, { recursive: true });
@@ -29,7 +29,7 @@ async function ensureOriginal(): Promise<void> {
 describe('GET /api/images endpoint', () => {
   beforeAll(async () => {
     await ensureOriginal();
-    // نظّف الكاش قبل كل سويت
+   
     for (const f of fs.readdirSync(CACHE)) {
       fs.unlinkSync(path.join(CACHE, f));
     }
@@ -46,7 +46,7 @@ describe('GET /api/images endpoint', () => {
   it('returns 400 for missing width/height', async () => {
     const res = await request(app)
       .get('/api/images')
-      .query({ filename: TEST_FILE, width: 120 }); // height ناقص
+      .query({ filename: TEST_FILE, width: 120 }); 
     expect(res.status).toBe(400);
     expect(res.body.error).toBeDefined();
   });

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp'; // لا بأس باستخدام sharp هنا لأنه dependency أساسي للمشروع
+import sharp from 'sharp'; 
 import { ORIGINALS, CACHE } from '../src/utils/paths';
 import { processImage } from '../src/utils/imageProcessor';
 
@@ -17,7 +17,7 @@ async function ensureOriginal(): Promise<void> {
         width: 60,
         height: 60,
         channels: 3,
-        background: { r: 0, g: 255, b: 0 } // أخضر
+        background: { r: 0, g: 255, b: 0 } 
       }
     })
       .jpeg({ quality: 90 })
@@ -30,12 +30,12 @@ describe('processImage utility', () => {
   beforeAll(async () => {
     await ensureOriginal();
 
-    // نظّف الكاش قبل السويت
+    
     for (const f of fs.readdirSync(CACHE)) {
       try {
         fs.unlinkSync(path.join(CACHE, f));
       } catch {
-        /* ignore */
+      
       }
     }
   });
@@ -48,7 +48,7 @@ describe('processImage utility', () => {
     });
     expect(fs.existsSync(outPath)).toBeTrue();
 
-    // اختياري: تأكد فعلاً أنه JPEG صالح
+   
     const meta = await sharp(outPath).metadata();
     expect(meta.width).toBe(30);
     expect(meta.height).toBe(30);
