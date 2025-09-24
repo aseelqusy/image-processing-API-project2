@@ -1,8 +1,7 @@
 {
   "spec_dir": "__tests__",
   "spec_files": ["**/*.spec.ts"],
-  "helpers": [],
-  "requires": ["ts-node/register"],
-  "stopSpecOnExpectationFailure": false,
-  "random": false
+  "helpers": ["./node_modules/ts-node/register/transpile-only"],
+  "random": false,
+  "stopSpecOnExpectationFailure": false
 }

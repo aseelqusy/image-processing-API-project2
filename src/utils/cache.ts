@@ -8,8 +8,6 @@ export function clearAllCache(): void {
     const p = path.join(CACHE, f);
     try {
       fs.unlinkSync(p);
-    } catch {
-      
-    }
+    } catch {}
   }
 }

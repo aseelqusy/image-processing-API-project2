@@ -76,12 +76,10 @@ router.put('/', async (req, res, next) => {
     const buf = Buffer.from(b64, 'base64');
     if (buf.length === 0) throw new ProcessingError('invalid base64 data', 400);
 
-    
     const tmpPath = `${outPath}.tmp-${Date.now()}`;
     try {
-      fs.writeFileSync(tmpPath, buf); 
+      fs.writeFileSync(tmpPath, buf);
 
-      
       try {
         fs.unlinkSync(outPath);
       } catch (e: unknown) {
@@ -91,18 +89,15 @@ router.put('/', async (req, res, next) => {
         }
       }
 
-      fs.renameSync(tmpPath, outPath); 
+      fs.renameSync(tmpPath, outPath);
     } catch (e: unknown) {
-      
       try {
         if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
-      } catch {
-        
-      }
+      } catch {}
       const err = e as NodeJS.ErrnoException;
       throw new ProcessingError(
         `failed to replace file (${err?.code ?? err?.message ?? 'unknown'})`,
-        500
+        500,
       );
     }
 
@@ -112,8 +107,6 @@ router.put('/', async (req, res, next) => {
     next(err);
   }
 });
-
-
 
 router.delete('/:filename', async (req, res, next) => {
   try {
@@ -127,8 +120,8 @@ router.delete('/:filename', async (req, res, next) => {
     if (!fs.existsSync(p))
       throw new ProcessingError('source image not found', 404);
 
-    fs.unlinkSync(p); 
-    clearAllCache(); 
+    fs.unlinkSync(p);
+    clearAllCache();
 
     res.json({ ok: true, filename, deleted: true });
   } catch (err) {
